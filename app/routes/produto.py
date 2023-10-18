@@ -9,67 +9,61 @@ produto = Blueprint("produto", __name__, url_prefix="/produtos")
 
 @produto.route("/list")
 def listProdutos():
-    if "username" in session:
-        produtos = mongo.db.produtos.find()
-        return render_template("produtos/list.html", produtos=produtos)
-    else:
+    if "username" not in session:
         return redirect(url_for("usuario.index"))
+    produtos = mongo.db.produtos.find()
+    return render_template("produtos/list.html", produtos=produtos)
 
 
 @produto.route("/insert", methods=["GET", "POST"])
 def inserirProduto():
     if request.method == "GET":
         return render_template("produtos/insert.html")
-    else:
-        nome = request.form.get("nome")
-        quantidade = request.form.get("quantidade")
-        preco = request.form.get("preco")
-        categoria = request.form.get("categoria")
-        estoque = request.form.get("estoque")
+    nome = request.form.get("nome")
+    quantidade = request.form.get("quantidade")
+    preco = request.form.get("preco")
+    categoria = request.form.get("categoria")
+    estoque = request.form.get("estoque")
 
-        if not nome or len(nome) > 50:
-            flash("Campo 'nome' é obrigatório")
-        elif not quantidade or not quantidade.isdigit() or int(quantidade) < 0:
-            flash("Campo 'quantidade' é obrigatorio.")
-        elif not categoria:
-            flash("Campo 'categoria' é obrigatório.")
-        elif not estoque:
-            flash("Campo 'estoque' é obrigatório.")
-        elif not preco:
-            flash("Campo 'preco' é obrigatorio ")
-        else:
-            mongo.db.produtos.insert_one(
-                {
-                    "produto": nome,
-                    "estoque": estoque,
-                    "categoria": categoria,
-                    "quantidade": quantidade,
-                    "preco": preco,
-                    "valor_total": (float(quantidade) * float(preco))     
-                }
-            )
-            flash('Produto criado com sucesso')
-        return redirect(url_for("produto.listProdutos"))
+    if not nome or len(nome) > 50:
+        flash("Campo 'nome' é obrigatório")
+    elif not quantidade or not quantidade.isdigit() or int(quantidade) < 0:
+        flash("Campo 'quantidade' é obrigatorio.")
+    elif not categoria:
+        flash("Campo 'categoria' é obrigatório.")
+    elif not estoque:
+        flash("Campo 'estoque' é obrigatório.")
+    elif not preco:
+        flash("Campo 'preco' é obrigatorio ")
+    else:
+        mongo.db.produtos.insert_one(
+            {
+                "produto": nome,
+                "estoque": estoque,
+                "categoria": categoria,
+                "quantidade": quantidade,
+                "preco": preco,
+                "valor_total": (float(quantidade) * float(preco))     
+            }
+        )
+        flash('Produto criado com sucesso')
+    return redirect(url_for("produto.listProdutos"))
 
 
 @produto.route("/edit", methods=["GET", "POST"])
 def editarProduto():
     if request.method == "GET":
-        idproduto = request.values.get("idproduto")
-
-        if not idproduto:
-            flash("Campo 'idproduto' é obrigatório.")
-            return redirect(url_for("produto.listProdutos"))
-        else:
+        if idproduto := request.values.get("idproduto"):
             idp = mongo.db.produtos.find({"_id": ObjectId(idproduto)})
-            produto = [i for i in idp]
-            estoques = set()
+            produto = list(idp)
             produtos = mongo.db.produtos.find()
-            for pr in produtos:
-                estoques.add(pr["estoque"])
+            estoques = {pr["estoque"] for pr in produtos}
             return render_template(
                 "produtos/edit.html", produto=produto, estoques=estoques
             )
+        else:
+            flash("Campo 'idproduto' é obrigatório.")
+            return redirect(url_for("produto.listProdutos"))
     else:
         idproduto = request.form.get("idproduto")
         nome = request.form.get("nome", "")
@@ -114,9 +108,8 @@ def editarProduto():
 
 @produto.route("/delete")
 def deletarProduto():
-    idproduto = request.values.get("idproduto", "")
-    if not idproduto:
-        flash("Campo 'idproduto' é obrigatório.")
-    else:
+    if idproduto := request.values.get("idproduto", ""):
         delete = mongo.db.produtos.delete_one({"_id": ObjectId(idproduto)})
+    else:
+        flash("Campo 'idproduto' é obrigatório.")
     return redirect(url_for("produto.listProdutos"))

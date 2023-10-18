@@ -11,7 +11,7 @@ userCommands = Blueprint("user", __name__)
 @click.argument("name")
 def get_user(name):
     userCollection = mongo.db.users
-    user = [u for u in userCollection.find({"name": name})]
+    user = list(userCollection.find({"name": name}))
     print(user)
 
 
@@ -22,8 +22,7 @@ def create_user(name):
     password = getpass.getpass()
     user = {"name": name, "password": generate_password_hash(password)}
 
-    userExists = userCollection.find_one({"name": name})
-    if userExists:
+    if userExists := userCollection.find_one({"name": name}):
         print(f"Usuario {name} já existe")
     else:
         userCollection.insert(user)
@@ -35,8 +34,7 @@ def create_user(name):
 def delete_user(name):
     userCollection = mongo.db.users
 
-    userExists = userCollection.find_one({"name": name})
-    if userExists:
+    if userExists := userCollection.find_one({"name": name}):
         question = input(f"Deseja realmente deletar o usuario {name}? (S/N) ")
 
         if question.upper() == "S":
