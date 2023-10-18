@@ -27,8 +27,7 @@ def login():
         username = request.form.get("usuario")
         password = request.form.get("senha")
 
-        user_found = mongo.db.users.find_one({"name": username})
-        if user_found:
+        if user_found := mongo.db.users.find_one({"name": username}):
             user_val = user_found["name"]
             passwordcheck = user_found["password"]
 
