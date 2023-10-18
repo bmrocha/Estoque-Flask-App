@@ -1,4 +1,5 @@
-# HandsOn-Flask-App
+# HandsOn
+## Estoque-Flask-App
 
 Repositório do segundo dia da serié de lives da HandsOn edição Python.
 
